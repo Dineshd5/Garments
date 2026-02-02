@@ -1,5 +1,21 @@
 {
     "compilerOptions": {
-        "baseUrl": "./src"
+        "baseUrl": "./src",
+        "paths": {
+            "*": [
+                "./src/*"
+            ]
+        }
+    },
+    "exclude": [
+        "node_modules",
+        "dist",
+        "build"
+    ],
+    "typeAcquisition": {
+        "include": [
+            "react",
+            "react-dom"
+        ]
     }
 }

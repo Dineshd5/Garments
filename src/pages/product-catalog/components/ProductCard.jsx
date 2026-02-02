@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from 'components/AppIcon';
 import Image from 'components/AppImage';
+import { formatCurrency } from '../../../utils/formatUtils';
 
 const ProductCard = ({ 
   product, 
@@ -55,7 +56,7 @@ const ProductCard = ({
                 </p>
                 <div className="flex items-center space-x-4">
                   <span className="text-lg font-semibold text-text-primary">
-                    ${product.basePrice}
+                    {formatCurrency(product.basePrice)}
                   </span>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStockStatusColor(product.availability)}`}>
                     {product.availability}
@@ -174,7 +175,7 @@ const ProductCard = ({
 
         <div className="flex items-center justify-between">
           <span className="text-xl font-semibold text-text-primary">
-            ${product.basePrice}
+            {formatCurrency(product.basePrice)}
           </span>
           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStockStatusColor(product.availability)}`}>
             {product.availability}

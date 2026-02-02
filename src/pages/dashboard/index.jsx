@@ -11,9 +11,11 @@ import LowStockAlerts from './components/LowStockAlerts';
 import UpcomingDeadlines from './components/UpcomingDeadlines';
 import ProductionChart from './components/ProductionChart';
 import CapacityChart from './components/CapacityChart';
+import ReportsModal from 'components/ReportsModal';
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isReportsModalOpen, setIsReportsModalOpen] = useState(false);
 
   const handleMenuToggle = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -75,7 +77,7 @@ const Dashboard = () => {
       description: "Start a new production order",
       icon: "Plus",
       color: "primary",
-      path: "/order-management"
+      path: "/order-management?action=new"
     },
     {
       id: 2,
@@ -88,10 +90,10 @@ const Dashboard = () => {
     {
       id: 3,
       title: "Generate Reports",
-      description: "Create performance reports",
-      icon: "FileText",
+      description: "Production & Sales analytics",
+      icon: "BarChart2",
       color: "accent",
-      path: "/dashboard"
+      onClick: () => setIsReportsModalOpen(true)
     }
   ];
 
@@ -163,34 +165,57 @@ const Dashboard = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {quickActions.map((action) => (
-                <Link
-                  key={action.id}
-                  to={action.path}
-                  className="group p-4 rounded-lg border border-border hover:border-primary-300 hover:bg-primary-50 transition-all duration-200"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className={`
-                      w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-200
-                      ${action.color === 'primary' ? 'bg-primary-100 text-primary-600 group-hover:bg-primary-200' :
-                        action.color === 'secondary'? 'bg-secondary-100 text-secondary-600 group-hover:bg-secondary-200' : 'bg-accent-100 text-accent-600 group-hover:bg-accent-200'}
-                    `}>
-                      <Icon name={action.icon} size={20} />
+                action.path ? (
+                  <Link 
+                    key={action.id}
+                    to={action.path}
+                    className="p-4 bg-white border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary-200 transition-all group"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className={`p-2 rounded-lg bg-${action.color}-50 text-${action.color}-600 group-hover:bg-${action.color}-100 transition-colors`}>
+                        <Icon name={action.icon} size={24} />
+                      </div>
+                      <Icon name="ArrowRight" size={16} className="text-secondary-400 group-hover:text-primary-500 transform group-hover:translate-x-1 transition-all" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-text-primary group-hover:text-primary-700 transition-colors duration-200">
-                        {action.title}
-                      </h3>
-                      <p className="text-sm text-text-secondary mt-1">
-                        {action.description}
-                      </p>
+                    <div className="mt-4">
+                      <h3 className="font-semibold text-text-primary group-hover:text-primary-700 transition-colors">{action.title}</h3>
+                      <p className="text-sm text-text-secondary mt-1">{action.description}</p>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                ) : (
+                  <button 
+                    key={action.id}
+                    onClick={action.onClick}
+                    className="p-4 bg-white border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary-200 transition-all group text-left w-full"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className={`p-2 rounded-lg bg-${action.color}-50 text-${action.color}-600 group-hover:bg-${action.color}-100 transition-colors`}>
+                        <Icon name={action.icon} size={24} />
+                      </div>
+                      <Icon name="ArrowRight" size={16} className="text-secondary-400 group-hover:text-primary-500 transform group-hover:translate-x-1 transition-all" />
+                    </div>
+                    <div className="mt-4">
+                      <h3 className="font-semibold text-text-primary group-hover:text-primary-700 transition-colors">{action.title}</h3>
+                      <p className="text-sm text-text-secondary mt-1">{action.description}</p>
+                    </div>
+                  </button>
+                )
               ))}
             </div>
           </div>
         </div>
       </main>
+      
+      {/* Reports Modal */}
+      <ReportsModal
+        isOpen={isReportsModalOpen}
+        onClose={() => setIsReportsModalOpen(false)}
+        data={[ // Mock data for report preview since Dashboard implies analytics
+           { id: "ORD-001", customerName: "Fashion Co", orderDate: "2024-01-20", totalAmount: 5000, status: "completed", productName: "T-Shirt Basic", productionLine: "Line A", dueDate: "2024-02-01", progress: 100 },
+           { id: "ORD-002", customerName: "Urban Threads", orderDate: "2024-01-22", totalAmount: 3200, status: "in_production", productName: "Polo Shirt", productionLine: "Line B", dueDate: "2024-02-05", progress: 60 },
+           { id: "ORD-003", customerName: "Design Corp", orderDate: "2024-01-25", totalAmount: 8500, status: "pending", productName: "Hoodie", productionLine: "Line A", dueDate: "2024-02-10", progress: 0 }
+        ]}
+      />
     </div>
   );
 };

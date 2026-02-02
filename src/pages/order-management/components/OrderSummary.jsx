@@ -1,7 +1,9 @@
 import React from 'react';
 import Icon from 'components/AppIcon';
+import { exportToCSV, exportToExcel } from '../../../utils/exportUtils';
+import { formatCurrency } from '../../../utils/formatUtils';
 
-const OrderSummary = ({ orders }) => {
+const OrderSummary = ({ orders, onImportClick }) => {
   // Calculate summary statistics
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(order => order.status === 'pending').length;
@@ -19,14 +21,7 @@ const OrderSummary = ({ orders }) => {
     return daysUntilDue <= 3 && order.status !== 'completed' && order.status !== 'shipped';
   }).length;
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+
 
   const summaryCards = [
     {
@@ -80,15 +75,31 @@ const OrderSummary = ({ orders }) => {
       <div className="bg-surface rounded-lg border border-border p-4">
         <h3 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h3>
         <div className="space-y-3">
-          <button className="w-full btn-primary flex items-center justify-center space-x-2">
+          <button 
+            onClick={() => window.location.href = '/order-management?action=new'}
+            className="w-full btn-primary flex items-center justify-center space-x-2"
+          >
             <Icon name="Plus" size={16} />
             <span>Create New Order</span>
           </button>
-          <button className="w-full btn-secondary flex items-center justify-center space-x-2">
-            <Icon name="Download" size={16} />
-            <span>Export Orders</span>
+          <button 
+            onClick={() => exportToCSV(orders, 'orders-export')}
+            className="w-full btn-secondary flex items-center justify-center space-x-2"
+          >
+            <Icon name="FileText" size={16} />
+            <span>Export CSV</span>
           </button>
-          <button className="w-full btn-secondary flex items-center justify-center space-x-2">
+          <button 
+            onClick={() => exportToExcel(orders, 'orders-export')}
+            className="w-full btn-secondary flex items-center justify-center space-x-2"
+          >
+            <Icon name="FileSpreadsheet" size={16} />
+            <span>Export Excel</span>
+          </button>
+          <button 
+            onClick={onImportClick}
+            className="w-full btn-secondary flex items-center justify-center space-x-2"
+          >
             <Icon name="Upload" size={16} />
             <span>Import Orders</span>
           </button>

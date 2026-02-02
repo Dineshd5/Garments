@@ -1,5 +1,6 @@
 import { supabase } from 'lib/supabase';
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from 'components/ui/Header';
 import Sidebar from 'components/ui/Sidebar';
 import Breadcrumb from 'components/ui/Breadcrumb';
@@ -9,12 +10,98 @@ import OrderFilters from './components/OrderFilters';
 import OrderModal from './components/OrderModal';
 import OrderSummary from './components/OrderSummary';
 import BulkActions from './components/BulkActions';
+import ImportModal from 'components/ImportModal';
+import { exportToCSV } from '../../utils/exportUtils';
 
 const OrderManagement = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  const handleImportOrders = async (data) => {
+    // Transform import data to match DB structure if needed
+    // For now, we'll try to insert directly or just map keys
+    // This assumes CSV headers match our schema or we map them
+    
+    // Simple mapping example (assuming CSV has camelCase headers matching our internal model)
+    // We would need to map back to snake_case for Supabase
+    const dbData = data.map(row => ({
+       customer_name: row.customerName,
+       product_name: row.productName,
+       quantity: parseInt(row.quantity),
+       total_amount: parseFloat(row.totalAmount),
+       status: 'pending', // Default status
+       order_date: new Date().toISOString(),
+       order_number: `ORD-${Date.now()}-${Math.floor(Math.random()*1000)}` 
+    }));
+
+    const { error } = await supabase.from('orders').insert(dbData);
+    if (error) throw error;
+    
+    // Refresh list
+    fetchOrders();
+    alert(`Successfully imported ${data.length} orders.`);
+  };
+
+  const handleSaveOrder = async (orderData) => {
+     try {
+       // Convert camelCase to snake_case for Supabase
+       const dbPayload = {
+         customer_name: orderData.customerName,
+         customer_email: orderData.customerEmail,
+         product_name: orderData.productName,
+         quantity: parseInt(orderData.quantity),
+         total_amount: parseFloat(orderData.totalAmount || (orderData.quantity * orderData.unitPrice)),
+         status: orderData.status,
+         priority: orderData.priority,
+         production_line: orderData.productionLine,
+         specifications: orderData.specifications,
+         design_notes: orderData.design,
+         unit_price: parseFloat(orderData.unitPrice),
+         due_date: orderData.dueDate || null,
+       };
+
+       if (selectedOrder && selectedOrder.dbId) {
+          // Update existing
+          const { error } = await supabase
+            .from('orders')
+            .update(dbPayload)
+            .eq('id', selectedOrder.dbId);
+          if (error) throw error;
+       } else {
+          // Create new
+          const { error } = await supabase
+            .from('orders')
+            .insert([{
+               ...dbPayload,
+               order_date: new Date().toISOString(),
+               order_number: `ORD-${Date.now()}` // Generate ID
+            }]);
+          if (error) throw error;
+       }
+       
+       fetchOrders();
+       setIsOrderModalOpen(false);
+       setSelectedOrder(null);
+     } catch (err) {
+       console.error('Error saving order:', err);
+       alert('Failed to save order: ' + err.message);
+     }
+  };
+  
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') === 'new') {
+      setSelectedOrder(null);
+      setIsOrderModalOpen(true);
+      // Clean URL without refresh
+      window.history.replaceState({}, '', '/order-management');
+    }
+  }, [location]);
   const [filters, setFilters] = useState({
     status: 'all',
     dateRange: 'all',
@@ -80,7 +167,7 @@ const OrderManagement = () => {
 
   // Filter and sort orders
   const filteredAndSortedOrders = useMemo(() => {
-    let filtered = ordersData.filter(order => {
+    let filtered = orders.filter(order => {
       const matchesStatus = filters.status === 'all' || order.status === filters.status;
       const matchesCustomer = !filters.customer || order.customerName.toLowerCase().includes(filters.customer.toLowerCase());
       const matchesProduct = !filters.product || order.productName.toLowerCase().includes(filters.product.toLowerCase());
@@ -184,11 +271,20 @@ const OrderManagement = () => {
             </div>
             
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button className="btn-secondary flex items-center space-x-2">
+              <button 
+                onClick={() => exportToCSV(orders, 'orders-export')}
+                className="btn-secondary flex items-center space-x-2"
+              >
                 <Icon name="Download" size={16} />
                 <span>Export</span>
               </button>
-              <button className="btn-primary flex items-center space-x-2">
+              <button 
+                onClick={() => {
+                  setSelectedOrder(null);
+                  setIsOrderModalOpen(true);
+                }}
+                className="btn-primary flex items-center space-x-2"
+              >
                 <Icon name="Plus" size={16} />
                 <span>New Order</span>
               </button>
@@ -228,7 +324,10 @@ const OrderManagement = () => {
 
             {/* Right Sidebar */}
             <div className="xl:col-span-1">
-              <OrderSummary orders={orders} />
+              <OrderSummary 
+                orders={orders} 
+                onImportClick={() => setIsImportModalOpen(true)}
+              />
             </div>
           </div>
         </div>
@@ -236,7 +335,7 @@ const OrderManagement = () => {
       </main>
 
       {/* Order Detail Modal */}
-      {isOrderModalOpen && selectedOrder && (
+      {isOrderModalOpen && (
         <OrderModal 
           order={selectedOrder}
           isOpen={isOrderModalOpen}
@@ -244,8 +343,18 @@ const OrderManagement = () => {
             setIsOrderModalOpen(false);
             setSelectedOrder(null);
           }}
+          onSave={handleSaveOrder}
         />
       )}
+
+      {/* Import Modal */}
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportOrders}
+        title="Import Orders"
+        requiredFields={['customerName', 'productName', 'quantity', 'totalAmount']}
+      />
     </div>
   );
 };

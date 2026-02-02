@@ -332,11 +332,11 @@ const ProductCatalog = () => {
           </div>
 
           {/* Bulk Operations Panel */}
-          {isBulkMode && (
-            <BulkOperationsPanel
+          {isBulkMode && selectedProducts.length > 0 && (
+            <BulkOperationsPanel 
               selectedCount={selectedProducts.length}
-              totalCount={filteredProducts.length}
-              onSelectAll={handleSelectAll}
+              selectedProducts={products.filter(p => selectedProducts.includes(p.id))}
+              onOperation={handleBulkOperation}
               onClearSelection={() => setSelectedProducts([])}
             />
           )}

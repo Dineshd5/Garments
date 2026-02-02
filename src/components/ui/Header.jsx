@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 import { useAuth } from 'contexts/AuthContext';
+import UserContextPanel from './UserContextPanel';
 
 const Header = ({ onMenuToggle, isSidebarOpen }) => {
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateProfile, userProfile } = useAuth();
   
   const notifications = [
     { id: 1, title: 'Production Line 2 Alert', message: 'Temperature threshold exceeded', time: '2 min ago', type: 'warning' },
@@ -16,14 +17,8 @@ const Header = ({ onMenuToggle, isSidebarOpen }) => {
     { id: 3, title: 'Inventory Low Alert', message: 'Steel components below minimum', time: '10 min ago', type: 'error' },
   ];
 
-  const handleUserMenuToggle = () => {
-    setIsUserMenuOpen(!isUserMenuOpen);
-    setIsNotificationOpen(false);
-  };
-
   const handleNotificationToggle = () => {
     setIsNotificationOpen(!isNotificationOpen);
-    setIsUserMenuOpen(false);
   };
 
   const handleLogout = async () => {
@@ -120,54 +115,102 @@ const Header = ({ onMenuToggle, isSidebarOpen }) => {
           </div>
 
           {/* User Menu */}
-          <div className="relative">
-            <button
-              onClick={handleUserMenuToggle}
-              className="flex items-center space-x-2 p-2 rounded-md text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900 transition-quick"
-              aria-label="User menu"
-            >
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <Icon name="User" size={16} color="#1E3A8A" />
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-text-primary">{user?.email || 'User'}</span>
-              <Icon name="ChevronDown" size={16} className={`transition-transform duration-150 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {/* User Dropdown */}
-            {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-surface rounded-lg shadow-elevation-2 border border-border z-1200">
-                <div className="p-4 border-b border-border">
-                  <p className="text-sm font-medium text-text-primary">{user?.email || 'User'}</p>
-                  <p className="text-xs text-text-secondary">Production Manager</p>
-                </div>
-                <div className="py-2">
-                  <button className="w-full px-4 py-2 text-left text-sm text-text-secondary hover:bg-secondary-50 hover:text-text-primary transition-quick flex items-center space-x-2">
-                    <Icon name="User" size={16} />
-                    <span>Profile Settings</span>
-                  </button>
-                  <button className="w-full px-4 py-2 text-left text-sm text-text-secondary hover:bg-secondary-50 hover:text-text-primary transition-quick flex items-center space-x-2">
-                    <Icon name="Settings" size={16} />
-                    <span>Preferences</span>
-                  </button>
-                  <button className="w-full px-4 py-2 text-left text-sm text-text-secondary hover:bg-secondary-50 hover:text-text-primary transition-quick flex items-center space-x-2">
-                    <Icon name="HelpCircle" size={16} />
-                    <span>Help & Support</span>
-                  </button>
-                </div>
-                <div className="border-t border-border py-2">
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-error hover:bg-error-50 transition-quick flex items-center space-x-2"
-                  >
-                    <Icon name="LogOut" size={16} />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          <UserContextPanel 
+            user={{
+              name: userProfile?.display_name || user?.email?.split('@')[0] || 'User',
+              role: userProfile?.role || 'Production Manager',
+              avatar: userProfile?.avatar_url,
+              email: user?.email
+            }}
+            onLogout={handleLogout}
+            onProfileClick={() => setIsProfileModalOpen(true)}
+            onSettingsClick={() => alert('Preferences coming soon!')}
+          />
         </div>
       </div>
+      
+      {/* Profile Modal */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-1300 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-surface w-full max-w-md rounded-lg shadow-elevation-3 border border-border">
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-xl font-semibold text-text-primary">Profile Settings</h2>
+              <button 
+                onClick={() => setIsProfileModalOpen(false)}
+                className="text-secondary-400 hover:text-text-primary transition-colors"
+              >
+                <Icon name="X" size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              await updateProfile({
+                display_name: formData.get('displayName'),
+                role: formData.get('role')
+              });
+              setIsProfileModalOpen(false);
+            }} className="p-6 space-y-4">
+              
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center text-4xl font-bold text-primary-700">
+                   {(userProfile?.display_name || user?.email || 'U').charAt(0).toUpperCase()}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Display Name</label>
+                <input 
+                  name="displayName"
+                  defaultValue={userProfile?.display_name || ''}
+                  placeholder="Enter your full name"
+                  className="input-field w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Role</label>
+                <select 
+                  name="role"
+                  defaultValue={userProfile?.role || 'Production Manager'}
+                  className="input-field w-full"
+                >
+                  <option>Production Manager</option>
+                  <option>Factory Supervisor</option>
+                  <option>Quality Inspector</option>
+                  <option>Inventory Manager</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
+                <input 
+                  value={user?.email || ''}
+                  disabled
+                  className="input-field w-full bg-secondary-50 text-secondary-500 cursor-not-allowed"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button 
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="btn-primary"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

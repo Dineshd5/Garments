@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from 'components/AppIcon';
+import { formatCurrency, formatDate } from '../../../utils/formatUtils';
 
 const OrderTable = ({ 
   orders, 
@@ -43,20 +44,10 @@ const OrderTable = ({
     return priorityColors[priority] || 'text-secondary-600';
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+
+
+
 
   const getSortIcon = (columnKey) => {
     if (sortConfig.key !== columnKey) {

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Icon from 'components/AppIcon';
+import { exportToCSV } from "../../../utils/exportUtils"; // Adjust path based on structure
 
-const BulkOperationsPanel = ({ selectedCount, totalCount, onSelectAll, onClearSelection }) => {
+const BulkOperationsPanel = ({ selectedCount, onOperation, onClearSelection, selectedProducts }) => {
   const [isOperationMenuOpen, setIsOperationMenuOpen] = useState(false);
 
   const bulkOperations = [
@@ -46,6 +47,16 @@ const BulkOperationsPanel = ({ selectedCount, totalCount, onSelectAll, onClearSe
 
   const handleOperationClick = (operationId) => {
     setIsOperationMenuOpen(false);
+    if (operationId === 'export-data') {
+      // Find the actual product objects that match the selected IDs
+      // Note: This requires selectedProducts to be passed as prop
+      if (selectedProducts && selectedProducts.length) {
+         exportToCSV(selectedProducts, 'products-export');
+      } else {
+         alert("Export functionality requires full product data");
+      }
+    }
+    onOperation(operationId);
     console.log(`Executing bulk operation: ${operationId} on ${selectedCount} products`);
     // Handle bulk operation logic here
   };

@@ -109,7 +109,7 @@ const UserContextPanel = ({ user, onLogout, onSettingsClick, onProfileClick }) =
             onClick={() => setIsOpen(false)}
           />
           
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-surface rounded-lg shadow-elevation-2 border border-border z-1200">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-surface rounded-lg shadow-elevation-2 border border-border z-1200">
             {/* User Details Header */}
             <div className="p-4 border-b border-border">
               <div className="flex items-center space-x-3">

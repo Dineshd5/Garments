@@ -47,6 +47,13 @@ const BulkActions = ({ selectedCount, onBulkAction, onClearSelection }) => {
       description: 'Export selected orders to CSV/Excel'
     },
     {
+      id: 'import',
+      label: 'Import Data',
+      icon: 'Upload',
+      color: 'text-purple-600',
+      description: 'Import orders from external source'
+    },
+    {
       id: 'duplicate',
       label: 'Duplicate Orders',
       icon: 'Copy',
@@ -184,6 +191,14 @@ const BulkActions = ({ selectedCount, onBulkAction, onClearSelection }) => {
         >
           <Icon name="Download" size={12} />
           <span>Export</span>
+        </button>
+        
+        <button
+          onClick={() => alert('Bulk import coming soon!')}
+          className="flex items-center space-x-1 px-3 py-1.5 bg-secondary-600 text-white rounded-md text-xs font-medium hover:bg-secondary-700 transition-colors"
+        >
+          <Icon name="Upload" size={12} />
+          <span>Import</span>
         </button>
       </div>
     </div>

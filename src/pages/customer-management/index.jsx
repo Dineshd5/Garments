@@ -7,6 +7,7 @@ import Icon from 'components/AppIcon';
 import CustomerTable from './components/CustomerTable';
 import CustomerSummary from './components/CustomerSummary';
 import CustomerProfile from './components/CustomerProfile';
+import { exportToCSV } from '../../utils/exportUtils';
 import CustomerFilters from './components/CustomerFilter';
 
 const CustomerManagement = () => {
@@ -274,7 +275,10 @@ Lisa Wang is very fashion-forward and often requests the latest trends and seaso
             </div>
             
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button className="btn-secondary flex items-center space-x-2">
+              <button 
+                onClick={() => exportToCSV(customers, 'customers-export')}
+                className="btn-secondary flex items-center space-x-2"
+              >
                 <Icon name="Download" size={16} />
                 <span>Export</span>
               </button>
